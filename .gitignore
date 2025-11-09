@@ -1,0 +1,33 @@
+# === Node.js / Express ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# === Environment files ===
+.env
+
+# === Logs ===
+logs
+*.log
+*.log.*
+
+# === OS / Editor files ===
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# === Optional: backups / temp files ===
+*.bak
+*.tmp
+
+# === Build / cache directories (if you add bundlers later) ===
+dist/
+build/
+.cache/
+
+# Ignore node_modules and environment files
+node_modules/
+.env

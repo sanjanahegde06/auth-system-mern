@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Auth</title>
+    <style>
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      * {
+        box-sizing: border-box;
+      }
+
+      .card {
+        width: 340px;
+        max-width: 90vw;
+        background: #ffffff;
+        padding: 28px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.2s ease-in-out;
+      }
+
+      .card:hover {
+        transform: scale(1.02);
+      }
+
+      h2 {
+        margin: 0 0 10px;
+        color: #333;
+      }
+
+      p {
+        margin: 0 0 16px;
+        color: #555;
+        font-size: 14px;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      input:focus {
+        border-color: #74b9ff;
+        outline: none;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px;
+        background-color: #74b9ff;
+        border: none;
+        border-radius: 6px;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background-color 0.2s ease-in-out;
+      }
+
+      button:hover {
+        background-color: #5da8f7;
+      }
+
+      .link {
+        color: #74b9ff;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      .msg {
+        margin-top: 10px;
+        font-size: 14px;
+        min-height: 18px;
+      }
+
+      .err {
+        color: #b00020;
+      }
+
+      .ok {
+        color: #2e7d32;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">Loading...</div>
+
+    <!-- React UMD -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <script>
+      (function () {
+        const e = React.createElement;
+
+        function App() {
+          const [isLogin, setIsLogin] = React.useState(true);
+          const [username, setUsername] = React.useState("");
+          const [password, setPassword] = React.useState("");
+          const [message, setMessage] = React.useState("");
+          const [msgClass, setMsgClass] = React.useState("");
+          const [token, setToken] = React.useState(localStorage.getItem("token") || "");
+          const [authMsg, setAuthMsg] = React.useState("");
+          const [whoami, setWhoami] = React.useState(null);
+
+          React.useEffect(() => {
+            if (token) fetchAuth(token);
+          }, [token]);
+
+          async function handleSubmit(ev) {
+            ev.preventDefault();
+            setMessage(""); setMsgClass("");
+            const endpoint = isLogin ? "/login" : "/signup";
+            try {
+              const res = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+              });
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                setMessage(data.err || "Error");
+                setMsgClass("msg err");
+                return;
+              }
+              setMessage(data.message || "Done");
+              setMsgClass("msg ok");
+              if (data.token) {
+                localStorage.setItem("token", data.token);
+                setToken(data.token);
+              }
+            } catch (err) {
+              setMessage("Network error");
+              setMsgClass("msg err");
+            }
+          }
+
+          async function fetchAuth(tok) {
+            setAuthMsg("");
+            try {
+              const res = await fetch("/auth", {
+                headers: { Authorization: "Bearer " + tok }
+              });
+              const data = await res.json().catch(() => ({}));
+              if (res.ok) {
+                setAuthMsg(data.message || "");
+                setWhoami(data.user || null);
+              } else {
+                setMessage(data.err || "Unauthorized");
+                setMsgClass("msg err");
+              }
+            } catch {
+              setMessage("Network error");
+              setMsgClass("msg err");
+            }
+          }
+
+          function logout() {
+            localStorage.removeItem("token");
+            setToken("");
+            setAuthMsg("");
+            setWhoami(null);
+            setMessage("");
+            setMsgClass("");
+          }
+
+          if (token && authMsg) {
+            return e("div", { className: "card" },
+              e("h2", null, "Authenticated"),
+              e("p", null, authMsg),
+              whoami ? e("p", null, "Hello, " + (whoami.username || "")) : null,
+              e("button", { onClick: logout }, "Log Out")
+            );
+          }
+
+          return e("div", { className: "card" },
+            e("h2", null, isLogin ? "Log In" : "Sign Up"),
+            e("p", null,
+              isLogin ? "New user? " : "Have an account? ",
+              e("span", {
+                className: "link",
+                onClick: () => { setIsLogin(!isLogin); setMessage(""); setMsgClass(""); }
+              }, isLogin ? "Sign Up" : "Log In")
+            ),
+            e("form", { onSubmit: handleSubmit },
+              e("input", {
+                type: "text", placeholder: "Username", value: username,
+                onChange: (ev) => setUsername(ev.target.value), required: true
+              }),
+              e("input", {
+                type: "password", placeholder: "Password", value: password,
+                onChange: (ev) => setPassword(ev.target.value), required: true
+              }),
+              e("button", { type: "submit" }, isLogin ? "Log In" : "Sign Up")
+            ),
+            e("div", { className: msgClass || "msg" }, message)
+          );
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+      })();
+    </script>
+  </body>
+</html>
