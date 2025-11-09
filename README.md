@@ -1,6 +1,6 @@
 # 🔐 Simple MERN Authentication App
 
-A minimal **MERN (MongoDB, Express, React, Node.js)** authentication project built for learning and demonstration.  
+A minimal **MERN (MongoDB, Express, React, Node.js)** authentication.  
 This app enables users to **sign up, log in, and access protected routes** using **JWT (JSON Web Tokens)** for secure authentication.
 
 ---
